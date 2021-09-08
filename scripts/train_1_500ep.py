@@ -11,7 +11,7 @@ train_df = pd.read_pickle("../data/train_data.pkl")
 test_df = pd.read_pickle("../data/test_data.pkl")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# train_X
+# concatenate mol_embed, protein_embed, and pKd + 5
 train_data = []
 for index, row in train_df.iterrows():
     train_data.append(np.concatenate((row['mol embed'],
@@ -19,6 +19,7 @@ for index, row in train_df.iterrows():
                                       np.array([np.log(row['Kd (nM)']) + 5]))))
 train_data = np.array(train_data)
 
+# 
 test_data = []
 for index, row in test_df.iterrows():
     test_data.append(np.concatenate((row['mol embed'],
@@ -31,6 +32,7 @@ test_data = np.array(test_data)
 
 
 # -------------------Define network
+#1792 -(elu)-> 2480 -(dropout 0.15, elu)-> 1280 -(dropout 0.15, elu)-> 512 -(dropout 0.15, elu)-> 256 -(dropout 0.15, elu)-> 
 class NN(nn.Module):
     def __init__(self, num_features):
         super(NN, self).__init__()
@@ -139,9 +141,10 @@ def train():
 # -----------------Output
 train_loss, test_loss = train()
 
-print(train_loss, test_loss)
-
-line1 = plt.scatter(train_loss.ravel(), test_loss.ravel(), c='red')
+#print(train_loss, test_loss)
+line1 = plt.scatter(np.arange(train_loss.ravel().shape[0]),train_loss.ravel(), c='red')
+line1 = plt.scatter(np.arange(test_loss.ravel().shape[0]),test_loss.ravel(), c='blue')
+plt.legend([line1, line2], ["train", "test"], loc=1)
 plt.xlabel('epoch')
 plt.ylabel('loss')
 plt.savefig('test_1_ep500_loss.png', dpi=150)
